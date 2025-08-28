@@ -20,3 +20,14 @@ export default defineConfigWithVueTs(
   vueTsConfigs.recommended,
   skipFormatting,
 )
+
+const path = require('path')
+
+module.exports = {
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    project: './tsconfig.json',
+    tsconfigRootDir: path.resolve(__dirname),
+  },
+  // other config...
+}
