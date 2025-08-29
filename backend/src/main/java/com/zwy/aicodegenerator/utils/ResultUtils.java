@@ -1,7 +1,7 @@
 package com.zwy.aicodegenerator.utils;
 
 import com.zwy.aicodegenerator.common.BaseResponse;
-import com.zwy.aicodegenerator.enumPac.ErrorCode;
+import com.zwy.aicodegenerator.model.enums.ErrorCode;
 
 public class ResultUtils {
 

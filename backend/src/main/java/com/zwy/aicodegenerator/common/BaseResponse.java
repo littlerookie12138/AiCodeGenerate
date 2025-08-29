@@ -1,6 +1,6 @@
 package com.zwy.aicodegenerator.common;
 
-import com.zwy.aicodegenerator.enumPac.ErrorCode;
+import com.zwy.aicodegenerator.model.enums.ErrorCode;
 import lombok.Data;
 
 import java.io.Serializable;

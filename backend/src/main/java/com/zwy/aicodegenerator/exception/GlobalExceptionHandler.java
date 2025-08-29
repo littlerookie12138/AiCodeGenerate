@@ -1,7 +1,7 @@
 package com.zwy.aicodegenerator.exception;
 
 import com.zwy.aicodegenerator.common.BaseResponse;
-import com.zwy.aicodegenerator.enumPac.ErrorCode;
+import com.zwy.aicodegenerator.model.enums.ErrorCode;
 import com.zwy.aicodegenerator.utils.ResultUtils;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;

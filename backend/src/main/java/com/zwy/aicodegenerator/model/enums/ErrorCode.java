@@ -1,4 +1,4 @@
-package com.zwy.aicodegenerator.enumPac;
+package com.zwy.aicodegenerator.model.enums;
 
 import lombok.Getter;
 

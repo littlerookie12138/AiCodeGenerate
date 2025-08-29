@@ -1,6 +1,6 @@
 package com.zwy.aicodegenerator.exception;
 
-import com.zwy.aicodegenerator.enumPac.ErrorCode;
+import com.zwy.aicodegenerator.model.enums.ErrorCode;
 import lombok.Getter;
 
 @Getter
