@@ -1,4 +1,4 @@
-package com.zwy.aicodegenerator.model.dto;
+package com.zwy.aicodegenerator.model.dto.user;
 
 import lombok.Data;
 
@@ -8,7 +8,7 @@ import java.io.Serializable;
  * 前端注册用户请求实体
  */
 @Data
-public class UserLoginRequest implements Serializable {
+public class UserRegisterRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**

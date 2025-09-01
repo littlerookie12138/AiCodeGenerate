@@ -1,23 +1,31 @@
 package com.zwy.aicodegenerator.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.zwy.aicodegenerator.exception.BusinessException;
 import com.zwy.aicodegenerator.mapper.UserMapper;
+import com.zwy.aicodegenerator.model.dto.user.UserQueryRequest;
 import com.zwy.aicodegenerator.model.entity.User;
 import com.zwy.aicodegenerator.model.enums.ErrorCode;
 import com.zwy.aicodegenerator.model.enums.UserRoleEnum;
 import com.zwy.aicodegenerator.model.vo.LoginUserVO;
+import com.zwy.aicodegenerator.model.vo.UserVO;
 import com.zwy.aicodegenerator.service.UserService;
 import com.zwy.aicodegenerator.utils.StringDealUtils;
 import com.zwy.aicodegenerator.utils.ThrowUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static com.zwy.aicodegenerator.constants.UserConstant.USER_SESSION_KEY;
 
 /**
  * 服务层实现。
@@ -66,12 +74,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     /**
      * 登录
+     *
      * @param userAccount
      * @param userPassword
+     * @param request
      * @return
      */
     @Override
-    public LoginUserVO login(String userAccount, String userPassword) {
+    public LoginUserVO login(String userAccount, String userPassword, HttpServletRequest request) {
         // 1.校验账号不能为空
         ThrowUtils.throwIf(StringUtils.isBlank(userAccount), ErrorCode.PARAMS_ERROR, "账号不能为空");
         ThrowUtils.throwIf(StringUtils.isBlank(userPassword), ErrorCode.PARAMS_ERROR, "密码不能为空");
@@ -83,11 +93,91 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         qw.eq(User::getUserAccount, userAccount)
                 .eq(User::getUserPassword, encryptPassword);
         List<User> users = mapper.selectListByQuery(qw);
-        ThrowUtils.throwIf(CollUtil.isEmpty(users), ErrorCode.PARAMS_ERROR, "账号或密码错误");
+        ThrowUtils.throwIf(CollUtil.isEmpty(users), ErrorCode.PARAMS_ERROR, "账号不存在");
         ThrowUtils.throwIf(users.size() > 1, ErrorCode.SYSTEM_ERROR, "账号密码非唯一");
 
+        // 获取到的唯一的用户
+        LoginUserVO res = new LoginUserVO();
+        BeanUtil.copyProperties(users.getFirst(), res);
 
-        return null;
+        // 设置session
+        request.getSession().setAttribute(USER_SESSION_KEY, users.getFirst());
+
+        return res;
+    }
+
+    /**
+     * 获取当前系统登录用户
+     *
+     * @param request
+     * @return
+     */
+    @Override
+    public User getLoginUser(HttpServletRequest request) {
+        Object userObj = request.getSession().getAttribute(USER_SESSION_KEY);
+        User result = null;
+        if (Objects.nonNull(userObj)) {
+            User currentUser = (User) userObj;
+            if (Objects.nonNull(currentUser.getId())) {
+                result = mapper.selectOneById(currentUser.getId());
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 用户登出
+     *
+     * @param request
+     * @return
+     */
+    @Override
+    public boolean userLogout(HttpServletRequest request) {
+        Object userObj = request.getSession().getAttribute(USER_SESSION_KEY);
+        ThrowUtils.throwIf(Objects.isNull(userObj), ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
+
+        // 移除session
+        request.getSession().removeAttribute(USER_SESSION_KEY);
+        return true;
+    }
+
+    @Override
+    public UserVO getUserVo(User user) {
+        if (Objects.isNull(user)) {
+            return null;
+        }
+        UserVO userVO = new UserVO();
+        BeanUtil.copyProperties(user, userVO, false);
+        return userVO;
+    }
+
+    @Override
+    public List<UserVO> getUserVoList(List<User> userList) {
+        if (CollUtil.isEmpty(userList)) {
+            return new ArrayList<>();
+        }
+        return userList.stream().map(this::getUserVo).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    @Override
+    public QueryWrapper getQueryWrapper(UserQueryRequest userQueryRequest) {
+        if (userQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
+        }
+        Long id = userQueryRequest.getId();
+        String userAccount = userQueryRequest.getUserAccount();
+        String userName = userQueryRequest.getUserName();
+        String userProfile = userQueryRequest.getUserProfile();
+        String userRole = userQueryRequest.getUserRole();
+        String sortField = userQueryRequest.getOrderBy();
+        String sortOrder = userQueryRequest.getOrderType();
+        return QueryWrapper.create()
+                .eq("id", id)
+                .eq("userRole", userRole)
+                .like("userAccount", userAccount)
+                .like("userName", userName)
+                .like("userProfile", userProfile)
+                .orderBy(sortField, !"desc".equals(sortOrder));
     }
 
 

@@ -30,7 +30,7 @@ public class PageRequest implements Serializable {
     /**
      * 主键
      */
-    private String id;
+    private Long id;
 
     private static final long serialVersionUID = 1L;
 }
