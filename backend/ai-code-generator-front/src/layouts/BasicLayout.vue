@@ -28,7 +28,9 @@ import { ref } from 'vue'
   padding-inline: 20px;
 }
 .layout .content {
-  margin-top: 55px;
+  text-align: left;
+  margin: 16px auto 56px;
+
   /* background: #181717; */
 }
 .layout .footer {

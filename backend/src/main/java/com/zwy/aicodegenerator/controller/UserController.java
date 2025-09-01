@@ -74,7 +74,17 @@ public class UserController {
         final String DEFAULT_PASSWORD = "12345678";
         String encryptPassword = StringDealUtils.getEncryptPassword(DEFAULT_PASSWORD);
         user.setUserPassword(encryptPassword);
-        boolean result = userService.save(user);
+        // 查找已被逻辑删除的用户
+        boolean result = false;
+        User exist = userService.findDeletedById(user.getUserAccount());
+        if (Objects.nonNull(exist)) {
+            user.setIsDelete(0);
+            user.setUserPassword(encryptPassword);
+            BeanUtil.copyProperties(exist, user, false);
+            userService.updateById(exist);
+        } else {
+            result = userService.save(user);
+        }
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(user.getId());
     }
@@ -112,6 +122,14 @@ public class UserController {
         }
         boolean b = userService.removeById(deleteRequest.getId());
         return ResultUtils.success(b);
+    }
+
+    /**
+     * 获取当前登录用户
+     */
+    @GetMapping("/me")
+    public BaseResponse<User> getLoginUser(HttpServletRequest request) {
+        return ResultUtils.success(userService.getLoginUser(request));
     }
 
     /**

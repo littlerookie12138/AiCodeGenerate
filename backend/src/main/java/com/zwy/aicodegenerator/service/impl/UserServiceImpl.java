@@ -3,6 +3,7 @@ package com.zwy.aicodegenerator.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.mybatisflex.core.logicdelete.LogicDeleteManager;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import com.zwy.aicodegenerator.exception.BusinessException;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static com.zwy.aicodegenerator.constants.UserConstant.USER_SESSION_KEY;
@@ -59,7 +61,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         // 3. 加密
         String encryptPassword = StringDealUtils.getEncryptPassword(userPassword);
-        // 4. 插入数据
+        // 4. 插入数据 先判断是否该账号被逻辑删除 如果是，将其删除
+        User exist = this.findDeletedById(userAccount);
+        if (Objects.nonNull(exist)) {
+            LogicDeleteManager.execWithoutLogicDelete(() -> mapper.deleteById(exist.getId()));
+        }
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
@@ -180,5 +186,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .orderBy(sortField, !"desc".equals(sortOrder));
     }
 
-
+    @Override
+    public User findDeletedById(String userAccount) {
+        QueryWrapper qw = new QueryWrapper();
+        qw.eq("userAccount", userAccount)
+                .eq("isDelete", 1);
+        AtomicReference<User> res = new AtomicReference<>();
+        LogicDeleteManager.execWithoutLogicDelete(() -> {
+            res.set(mapper.selectListByQuery(qw).stream().findFirst().orElse(null));
+        });
+        return res.get();
+    }
 }

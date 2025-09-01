@@ -7,6 +7,8 @@ spring:
     url: jdbc:mysql://localhost:3306/ai_code_generator?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=UTC
     username: zhangbaba
     password: zhangbaba.1069
+  profiles:
+    active: local
 
 server:
   port: 8123

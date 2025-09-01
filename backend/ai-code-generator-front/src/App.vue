@@ -7,16 +7,12 @@ import { QuestionCircleOutlined } from '@ant-design/icons-vue'
 import BasicLayout from '@/layouts/BasicLayout.vue'
 import { hello } from '@/api/helloController.ts'
 import { userLoginUserStore } from './stores/userLoginUserStore'
+import { onMounted } from 'vue'
 
 const loginUserStore = userLoginUserStore()
-
-hello()
-  .then((res: any) => {
-    console.log('hello', res)
-  })
-  .catch((err: any) => {
-    console.error('hello error', err)
-  })
+onMounted(() => {
+  loginUserStore.fetchLoginUser()
+})
 </script>
 
 <style scoped></style>

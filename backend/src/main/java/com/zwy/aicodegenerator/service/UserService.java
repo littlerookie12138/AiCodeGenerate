@@ -78,4 +78,6 @@ public interface UserService extends IService<User> {
      * @return 返回一个QueryWrapper对象，用于构建数据库查询条件
      */
     QueryWrapper getQueryWrapper(UserQueryRequest userQueryRequest);
+
+    User findDeletedById(String userAccount);
 }
