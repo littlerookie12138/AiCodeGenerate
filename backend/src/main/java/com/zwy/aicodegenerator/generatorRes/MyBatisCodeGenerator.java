@@ -44,7 +44,7 @@ public class MyBatisCodeGenerator {
         Generator generator = new Generator(dataSource, globalConfig);
 
         // 生成代码
-//        generator.generate();
+        generator.generate();
     }
 
     // 详细配置见：https://mybatis-flex.com/zh/others/codegen.html
