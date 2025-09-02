@@ -1,10 +1,12 @@
 import axios from 'axios'
 import { message } from 'ant-design-vue'
+import { API_BASE_URL } from '@/config/env'
 
+// 创建 Axios 实例
 const myAxios = axios.create({
-  // baseURL: 'http://localhost:8123', // 如果需要前端做跨域代理，这里置为空或者移除
-  timeout: 5000, // Request timeout
-  withCredentials: true, // Allow cross-origin requests to carry cookies
+  baseURL: API_BASE_URL,
+  timeout: 60000,
+  withCredentials: true,
 })
 
 // 全局请求拦截器

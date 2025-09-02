@@ -1,6 +1,5 @@
 package com.zwy.aicodegenerator.core.saver.impl;
 
-import com.zwy.aicodegenerator.ai.model.HtmlCodeResult;
 import com.zwy.aicodegenerator.ai.model.MultiFileCodeResult;
 import com.zwy.aicodegenerator.core.saver.CodeFileSaverTemplate;
 import com.zwy.aicodegenerator.exception.BusinessException;
@@ -21,7 +20,7 @@ public class MultiFileCodeFileSaverTemplate extends CodeFileSaverTemplate<MultiF
      */
     @Override
     protected CodeGenTypeEnum getCodeType() {
-        return CodeGenTypeEnum.HTML;
+        return CodeGenTypeEnum.MULTI_FILE;
     }
 
     /**

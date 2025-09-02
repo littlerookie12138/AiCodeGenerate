@@ -1,18 +1,29 @@
-<template>
-  <BasicLayout></BasicLayout>
-</template>
-
-<script lang="ts" setup>
-import { QuestionCircleOutlined } from '@ant-design/icons-vue'
+<script setup lang="ts">
 import BasicLayout from '@/layouts/BasicLayout.vue'
-import { hello } from '@/api/helloController.ts'
-import { userLoginUserStore } from './stores/userLoginUserStore'
-import { onMounted } from 'vue'
-
-const loginUserStore = userLoginUserStore()
-onMounted(() => {
-  loginUserStore.fetchLoginUser()
-})
 </script>
 
-<style scoped></style>
+<template>
+  <BasicLayout />
+</template>
+
+<style>
+/* 全局样式优化 */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
+}
+</style>

@@ -10,10 +10,7 @@ import com.zwy.aicodegenerator.common.BaseResponse;
 import com.zwy.aicodegenerator.constants.AppConstant;
 import com.zwy.aicodegenerator.constants.UserConstant;
 import com.zwy.aicodegenerator.exception.BusinessException;
-import com.zwy.aicodegenerator.model.dto.app.AppAddRequest;
-import com.zwy.aicodegenerator.model.dto.app.AppAdminUpdateRequest;
-import com.zwy.aicodegenerator.model.dto.app.AppQueryRequest;
-import com.zwy.aicodegenerator.model.dto.app.AppUpdateRequest;
+import com.zwy.aicodegenerator.model.dto.app.*;
 import com.zwy.aicodegenerator.model.entity.App;
 import com.zwy.aicodegenerator.model.entity.User;
 import com.zwy.aicodegenerator.model.enums.CodeGenTypeEnum;
@@ -323,25 +320,23 @@ public class AppController {
         ));
     }
 
-
-//    # 1. 用户登录
-//    curl -X POST "http://localhost:8123/api/user/login" \
-//            -H "Content-Type: application/json" \
-//            -d '{
-//            "userAccount": "zhangbaba",
-//            "userPassword": "12345678"
-//}' \
-//  -c cookies.txt
-//
-//        # 2. 调用生成代码接口（流式）
-//curl -G "http://localhost:8123/api/app/chat/gen/code" \
-//        --data-urlencode "appId=320354231382269952" \
-//        --data-urlencode "message=做个个人博客,代码少于30行" \
-//        -H "Accept: text/event-stream" \
-//        -H "Cache-Control: no-cache" \
-//        -b cookies.txt \
-//        --no-buffer
-
-
+    /**
+     * 应用部署
+     *
+     * @param appDeployRequest 部署请求
+     * @param request          请求
+     * @return 部署 URL
+     */
+    @PostMapping("/deploy")
+    public BaseResponse<String> deployApp(@RequestBody AppDeployRequest appDeployRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(appDeployRequest == null, ErrorCode.PARAMS_ERROR);
+        Long appId = appDeployRequest.getAppId();
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用 ID 不能为空");
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        // 调用服务部署应用
+        String deployUrl = appService.deployApp(appId, loginUser);
+        return ResultUtils.success(deployUrl);
+    }
 
 }

@@ -3,6 +3,7 @@ package com.zwy.aicodegenerator.core.saver;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import com.zwy.aicodegenerator.constants.AppConstant;
 import com.zwy.aicodegenerator.exception.BusinessException;
 import com.zwy.aicodegenerator.model.enums.CodeGenTypeEnum;
 import com.zwy.aicodegenerator.model.enums.ErrorCode;
@@ -21,7 +22,7 @@ import java.util.Objects;
 public abstract class CodeFileSaverTemplate<T> {
 
     // 文件保存根目录
-    private static final String FILE_SAVE_ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_output";
+    private static final String FILE_SAVE_ROOT_DIR = AppConstant.CODE_OUTPUT_ROOT_DIR;
 
     public final File saveCode(T result, Long appId) {
         // 1.验证输入
