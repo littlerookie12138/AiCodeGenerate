@@ -32,9 +32,10 @@ public class AiCodeGeneratorFacade {
      *
      * @param userMsg
      * @param codeGenType
+     * @param appId
      * @return
      */
-    public File generateAndSaveCode(String userMsg, CodeGenTypeEnum codeGenType) {
+    public File generateAndSaveCode(String userMsg, CodeGenTypeEnum codeGenType, Long appId) {
         ThrowUtils.throwIf(Objects.isNull(codeGenType), ErrorCode.PARAMS_ERROR, "生成类型不能为空");
 
         return switch (codeGenType) {
@@ -44,7 +45,7 @@ public class AiCodeGeneratorFacade {
                 HtmlCodeResult htmlCodeResult = aiCodeGeneratorService.generateHTMLCode(userMsg);
 
                 // 保存单文件代码结果并返回文件对象
-                yield CodeFileSaverExecutor.executeSaver(htmlCodeResult, CodeGenTypeEnum.HTML);
+                yield CodeFileSaverExecutor.executeSaver(htmlCodeResult, CodeGenTypeEnum.HTML, appId);
             }
             case MULTI_FILE -> {
 
@@ -52,7 +53,7 @@ public class AiCodeGeneratorFacade {
                 MultiFileCodeResult multiFileCodeResult = aiCodeGeneratorService.generateMultiFileCode(userMsg);
 
                 // 使用代码保存工具将生成的多文件代码结果保存为文件，并返回该文件对象
-                yield CodeFileSaverExecutor.executeSaver(multiFileCodeResult, CodeGenTypeEnum.MULTI_FILE);
+                yield CodeFileSaverExecutor.executeSaver(multiFileCodeResult, CodeGenTypeEnum.MULTI_FILE, appId);
             }
             default ->
                     throw new BusinessException(ErrorCode.OPERATION_ERROR, "不支持的生成类型" + codeGenType.getValue());
@@ -64,19 +65,20 @@ public class AiCodeGeneratorFacade {
      *
      * @param userMsg
      * @param codeGenType
+     * @param appId
      * @return
      */
-    public Flux<String> generateAndSaveCodeStream(String userMsg, CodeGenTypeEnum codeGenType) {
+    public Flux<String> generateAndSaveCodeStream(String userMsg, CodeGenTypeEnum codeGenType, Long appId) {
         ThrowUtils.throwIf(Objects.isNull(codeGenType), ErrorCode.PARAMS_ERROR, "生成类型不能为空");
 
         return switch (codeGenType) {
             case HTML -> {
                 Flux<String> result = aiCodeGeneratorService.generateHTMLCodeStream(userMsg);
-                yield processCodeStream(result, CodeGenTypeEnum.HTML);
+                yield processCodeStream(result, CodeGenTypeEnum.HTML, appId);
             }
             case MULTI_FILE -> {
                 Flux<String> result = aiCodeGeneratorService.generateMultiFileCodeStream(userMsg);
-                yield processCodeStream(result, CodeGenTypeEnum.MULTI_FILE);
+                yield processCodeStream(result, CodeGenTypeEnum.MULTI_FILE, appId);
             }
             default ->
                     throw new BusinessException(ErrorCode.OPERATION_ERROR, "不支持的生成类型" + codeGenType.getValue());
@@ -84,7 +86,15 @@ public class AiCodeGeneratorFacade {
     }
 
 
-    private Flux<String> processCodeStream(Flux<String> codeStream, CodeGenTypeEnum codeGenType) {
+    /**
+     * 处理代码流的方法
+     *
+     * @param codeStream  代码流，包含多个代码片段
+     * @param codeGenType 代码生成类型
+     * @param appId       应用ID
+     * @return 返回处理后的代码流
+     */
+    private Flux<String> processCodeStream(Flux<String> codeStream, CodeGenTypeEnum codeGenType, Long appId) {
         // 定义一个字符串拼接器 用于流式返回所有代码后再保存代码
         StringBuilder sb = new StringBuilder();
 
@@ -92,10 +102,14 @@ public class AiCodeGeneratorFacade {
             try {
                 // 完成后保存代码
                 String totalCode = sb.toString();
+                // 执行代码解析器，解析完整代码
+                // 执行代码保存器，将解析后的代码保存到文件
                 Object afterParsedRes = CodeParserExecutor.executeParser(totalCode, codeGenType);
-                File file = CodeFileSaverExecutor.executeSaver(afterParsedRes, codeGenType);
+                // 记录文件创建成功的日志
+                File file = CodeFileSaverExecutor.executeSaver(afterParsedRes, codeGenType, appId);
                 log.info("文件创建完成， 目录为{}", file.getAbsolutePath());
             } catch (Exception e) {
+                // 记录文件创建失败的日志
                 e.printStackTrace();
                 log.error("文件创建失败, {}", e.getMessage());
             }

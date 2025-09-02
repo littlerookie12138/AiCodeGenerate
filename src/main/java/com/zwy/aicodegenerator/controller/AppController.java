@@ -2,6 +2,7 @@ package com.zwy.aicodegenerator.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.zwy.aicodegenerator.annotation.AuthCheckAnnotation;
@@ -24,10 +25,15 @@ import com.zwy.aicodegenerator.utils.ResultUtils;
 import com.zwy.aicodegenerator.utils.ThrowUtils;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -281,6 +287,61 @@ public class AppController {
         // 获取封装类
         return ResultUtils.success(appService.getAppVO(app));
     }
+
+    /**
+     * 应用聊天生成代码（流式 SSE）
+     *
+     * @param appId   应用 ID
+     * @param message 用户消息
+     * @param request 请求对象
+     * @return 生成结果流
+     */
+    @GetMapping(value = "/chat/gen/code", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> chatToGenCode(@RequestParam Long appId,
+                                                       @RequestParam String message,
+                                                       HttpServletRequest request) {
+        // 参数校验
+        ThrowUtils.throwIf(appId == null || appId <= 0, ErrorCode.PARAMS_ERROR, "应用ID无效");
+        ThrowUtils.throwIf(StrUtil.isBlank(message), ErrorCode.PARAMS_ERROR, "用户消息不能为空");
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        // 调用服务生成代码（流式）
+        Flux<String> contentFlux = appService.chatToGenCode(appId, message, loginUser);
+
+        return contentFlux.map(chunk -> {
+            Map<String, String> wrapper = Map.of("d", chunk);
+            // 解决直接返回flux<String>时的丢失空格或回车等占位符的问题
+            return ServerSentEvent.<String>builder()
+                    .data(JSONUtil.toJsonStr(wrapper))
+                    .build();
+        }).concatWith(Mono.just(
+                // 发送结束事件 提醒前端我结束当前返回事件了
+                ServerSentEvent.<String>builder()
+                        .event("done")
+                        .data("")
+                        .build()
+        ));
+    }
+
+
+//    # 1. 用户登录
+//    curl -X POST "http://localhost:8123/api/user/login" \
+//            -H "Content-Type: application/json" \
+//            -d '{
+//            "userAccount": "zhangbaba",
+//            "userPassword": "12345678"
+//}' \
+//  -c cookies.txt
+//
+//        # 2. 调用生成代码接口（流式）
+//curl -G "http://localhost:8123/api/app/chat/gen/code" \
+//        --data-urlencode "appId=320354231382269952" \
+//        --data-urlencode "message=做个个人博客,代码少于30行" \
+//        -H "Accept: text/event-stream" \
+//        -H "Cache-Control: no-cache" \
+//        -b cookies.txt \
+//        --no-buffer
+
 
 
 }

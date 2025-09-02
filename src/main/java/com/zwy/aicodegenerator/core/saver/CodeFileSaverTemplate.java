@@ -6,6 +6,7 @@ import cn.hutool.core.util.StrUtil;
 import com.zwy.aicodegenerator.exception.BusinessException;
 import com.zwy.aicodegenerator.model.enums.CodeGenTypeEnum;
 import com.zwy.aicodegenerator.model.enums.ErrorCode;
+import com.zwy.aicodegenerator.utils.ThrowUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -22,11 +23,11 @@ public abstract class CodeFileSaverTemplate<T> {
     // 文件保存根目录
     private static final String FILE_SAVE_ROOT_DIR = System.getProperty("user.dir") + "/tmp/code_output";
 
-    public final File saveCode(T result) {
+    public final File saveCode(T result, Long appId) {
         // 1.验证输入
         validateInput(result);
         // 2.构建目录
-        String baseDirPath = buildUniqueDir();
+        String baseDirPath = buildUniqueDir(appId);
         // 3.保存文件（具体实现交给子类）
         saveFiles(result, baseDirPath);
 
@@ -51,9 +52,11 @@ public abstract class CodeFileSaverTemplate<T> {
     /**
      * 构建唯一目录路径：tmp/code_output/bizType_雪花ID
      */
-    protected String buildUniqueDir() {
+    protected String buildUniqueDir(Long appId) {
+        ThrowUtils.throwIf(appId == null, ErrorCode.SYSTEM_ERROR, "appId不能为空");
+
         String bizType = getCodeType().getValue();
-        String uniqueDirName = StrUtil.format("{}_{}", bizType, IdUtil.getSnowflakeNextIdStr());
+        String uniqueDirName = StrUtil.format("{}_{}", bizType, appId);
         String dirPath = FILE_SAVE_ROOT_DIR + File.separator + uniqueDirName;
         FileUtil.mkdir(dirPath);
         return dirPath;
